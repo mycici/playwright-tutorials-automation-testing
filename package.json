@@ -1,0 +1,22 @@
+{
+  "name": "playwright-tutorials-automation-testing",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mycici/playwright-tutorials-automation-testing.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mycici/playwright-tutorials-automation-testing/issues"
+  },
+  "homepage": "https://github.com/mycici/playwright-tutorials-automation-testing#readme",
+  "description": "",
+  "devDependencies": {
+    "@playwright/test": "^1.53.1",
+    "@types/node": "^24.0.4"
+  }
+}
