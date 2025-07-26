@@ -1,16 +1,15 @@
-import { expect, test } from "../fixtures/fixtures";
+import { test, expect } from "../fixtures/fixtures";
+import HomePage from "../pages/HomePage";
 
-
-
-test('Item page has title, price and add to cart button', async ({page})=>
-{
-   await page.goto('https://rahulshettyacademy.com/client/#/dashboard/dash') 
-   const firstItem = page.locator('.card-body').first()
-   const firstItemTitle = await firstItem.getByRole('heading', {level: 5}).innerText()
-   const firstItemPrice = await firstItem.locator('.text-muted').innerText()
-   await firstItem.getByRole('button', {name: 'View'}).click()
-
-   await expect(page.locator('.container').getByRole('heading', {level:2})).toHaveText(firstItemTitle)
-   await expect(page.locator('.container').getByRole('heading', {level:3})).toHaveText(firstItemPrice)
-   await expect(page.getByRole('button', {name: 'Add to Cart'})).toBeVisible()
-})
+test('Random card details match between list and detail pages', async ({page}) => {
+    const homePage = new HomePage(page);
+    await homePage.openHomePage();
+    
+    const cardDetails = await homePage.openRandomCardAndGetDetails();
+    
+    await expect(page.locator('.container').getByRole('heading', {level: 2}))
+        .toHaveText(cardDetails.title);
+    await expect(page.locator('.container').getByRole('heading', {level: 3}))
+        .toHaveText(cardDetails.price);
+    await expect(page.getByRole('button', {name: 'Add to Cart'})).toBeVisible();
+});

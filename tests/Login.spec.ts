@@ -9,5 +9,7 @@ test('Login with valid regular user', async ({page}) => {
     await page.getByRole('button', {name: 'Login'}).click()
     await expect(page.getByRole('button', {name: 'Sign Out'})).toBeVisible()
 
+    
+
 })
 
