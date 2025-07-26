@@ -1,0 +1,26 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "tonuza7211@dropjar.com",
+      "password": "123qweASD",
+      "role": "regular"
+    },
+    {
+      "id": 2,
+      "email": "user2@dropjar.com", 
+      "password": "123qweASD",
+      "role": "regular"
+    },
+    {
+      "id": 3,
+      "email": "user3@dropjar.com",
+      "password": "123qweASD", 
+      "role": "premium"
+    }
+  ],
+  "defaultUser": {
+    "email": "tonuza7211@dropjar.com",
+    "password": "123qweASD"
+  }
+}
