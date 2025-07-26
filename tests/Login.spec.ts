@@ -17,3 +17,4 @@ test('Login with valid regular user', async ({page}) => {
     await expect(page.getByRole('button', {name: 'Sign Out'})).toBeVisible()
 
 })
+
