@@ -1,17 +1,15 @@
-import { expect } from "@playwright/test";
+import { test, expect } from "../fixtures/fixtures";
+import HomePage from "../pages/HomePage";
 
-
-const {test} = require ('@playwright/test');
-
-
-
-test('First test', async ({browser, page})=>
-{
-    // const context = await browser.newContext()
-    // const page = await context.newPage();
+test('Random card details match between list and detail pages', async ({page}) => {
+    const homePage = new HomePage(page);
+    await homePage.openHomePage();
     
-    await page.goto('https://google.com')
-    await expect(page).toHaveTitle("Google")
-
-
-})
+    const cardDetails = await homePage.openRandomCardAndGetDetails();
+    
+    await expect(page.locator('.container').getByRole('heading', {level: 2}))
+        .toHaveText(cardDetails.title);
+    await expect(page.locator('.container').getByRole('heading', {level: 3}))
+        .toHaveText(cardDetails.price);
+    await expect(page.getByRole('button', {name: 'Add to Cart'})).toBeVisible();
+});
