@@ -1,7 +1,15 @@
-import { test as baseTest, expect } from '@playwright/test';
+import { test as baseTest, request} from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
-import testUser from '../test-data/testUser.json';
+import { Urls } from '../test-data/common/page-url-endpoints';
+
+// remove: import testUser from '../test-data/qa/testUser.json';
+const testUser = JSON.parse(
+  fs.readFileSync(
+    path.resolve(__dirname, `../test-data/${process.env.ENV || 'qa'}/testUser.json`),
+    'utf-8'
+  )
+);
 
 export * from '@playwright/test';
 
@@ -39,7 +47,7 @@ export const test = baseTest.extend<{}, { workerStorageState: string }>({
  * Retrieves user account credentials for the specified worker ID
  */
 function getUserAccount(workerId: number) {
-  return testUser.users.find(user => user.id === workerId) || testUser.defaultUser;
+  return testUser.users.find((user: any) => user.id === workerId) || testUser.defaultUser;
 }
 
 /**
@@ -71,33 +79,24 @@ async function authenticateUser(browser: any, account: any) {
  * Performs API login and returns authentication data
  */
 async function performApiLogin(context: any, account: any) {
-  const response = await context.request.post(
-    'https://rahulshettyacademy.com/api/ecom/auth/login',
-    {
-      form: {
-        userEmail: account.email,
-        userPassword: account.password
-      }
-    }
-  );
+  const baseURL = test.info().project.use?.baseURL as string;
+const api = await request.newContext({ baseURL });
+try {
+  const response = await api.post(Urls.api, {
+    form: { userEmail: account.email, userPassword: account.password }
+  });
 
-  if (!response.ok()) {
-    const errorText = await response.text();
-    throw new Error(
-      `Authentication failed with status ${response.status()}: ${errorText}`
-    );
-  }
+  if (!response.ok())
+    throw new Error(`Authentication failed with status ${response.status()}: ${await response.text()}`);
 
-  const loginData = await response.json();
-  
-  if (!loginData.token || !loginData.userId) {
+  const loginData = await response.json(); // read before dispose
+  if (!loginData.token || !loginData.userId)
     throw new Error('Invalid response: missing token or userId');
-  }
 
-  return {
-    token: loginData.token,
-    userId: loginData.userId
-  };
+  return { token: loginData.token, userId: loginData.userId };
+} finally {
+  await api.dispose();
+}
 }
 
 /**
@@ -107,10 +106,11 @@ async function setupBrowserSession(context: any, authData: any) {
   const page = await context.newPage();
   
   try {
-    await page.goto('https://rahulshettyacademy.com/client');
+    const baseURL = test.info().project.use?.baseURL as string;
+    await page.goto(`${baseURL}${Urls.root}`);
     
     await page.evaluate(
-      ({ token, userId }) => {
+      ({ token, userId }: { token: string; userId: string }) => {
         localStorage.setItem('token', token);
         localStorage.setItem('userId', userId);
       },

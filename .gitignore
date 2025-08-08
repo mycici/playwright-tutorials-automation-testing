@@ -3,5 +3,5 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
-tests/example.spec.ts
-tests-examples/demo-todo-app.spec.ts
+.env.qa
+.env.dev

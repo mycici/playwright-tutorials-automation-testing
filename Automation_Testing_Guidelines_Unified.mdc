@@ -1,0 +1,117 @@
+## 1. Golden Rules
+
+- **Test in isolation.** Each test prepares its own pre‑conditions so it can run in parallel.  
+- **One purpose per test.** Keep scenarios laser‑focused; shorter tests fail faster and read better.  
+- **Use fixtures for setup and teardown.** Place common setup logic in `/fixtures/` and keep it out of the test body.  
+- **Stay remote.** Interact only through the public UI or API—never touch the database or local files directly.  
+- **Assert what matters.** Use Playwright `expect` (`hard` or `soft`) so reports are accurate and readable.  
+- **Config‑driven data.** Generate data with factories or JSON files; avoid hard‑coded literals.  
+
+---
+
+## 2. Page Object Model (POM)
+
+- **POM pattern.** Follow the Playwright POM guide. Page Objects extend `BasePage` and live in `/pages/`; reusable forms extend `BaseForm` in `/pages/forms/`.  
+- **URL endpoints.** Register every page in `page-url-endpoints.ts` so it can be opened with `page.visit()`.  
+- **Fixture wiring.** Add Page Object fixtures in `page-object-fixtures.ts`.  
+
+---
+
+## 3. Test Data Management
+
+- **Types and factories.** Define data models in `/models/` and create dynamic data with `faker`.  
+- **Constants.** Keep business constants in `/constants/`.  
+- **Static data.** Store pre‑created entities under `/test-data/{env}/`.  
+
+---
+
+## 4. Reporting and Readability
+
+- **Step decorator.** Use `@reportStep` to convert method names into readable report steps.  
+- **Step grouping.** Bundle related steps with helpers in `step.helper.ts`.  
+- **Artifacts.** Capture screenshots, logs, and traces with utilities such as `annotations.helper.ts`.  
+
+---
+
+## 5. API Usage
+
+- **Seed via API.** Create or clean up data through REST helpers to keep UI tests lean.  
+- **Type‑safe responses.** Validate payloads with Zod schemas in `/schemas/` when responses drive assertions.  
+
+---
+
+## 6. User Sessions
+
+- **Session helpers.** Create isolated sessions with `createConsumerSession` or `createEnterpriseSession`; reuse sessions with `saveAuthByUser` and `useAuthByUser`.  
+
+```ts
+await step.session(propertyManager, 'Start PM session', async () => {
+  const pmSession = await createEnterpriseSession();
+  await loginPage(pmSession).visit();
+  await loginPage(pmSession).logIn(propertyManager);
+  await releaseSession(pmSession, { saveAuthByUser: propertyManager });
+});
+```
+
+---
+
+## 7. Locators
+
+- **Built‑in locators.** Prefer Playwright’s semantic locators (`getByRole`, `getByLabel`, `getByText`).  
+- **Stable attributes.** When necessary, rely on `data-testid` rather than XPath or fragile CSS.  
+
+---
+
+## 8. Assertions
+
+- **Auto‑retry.** Use Playwright’s retrying `expect` on `Locator`s within Page Objects.  
+- **Soft vs. hard.** Default to `expect.soft()`; reserve hard assertions for critical failures.  
+- **Custom messages.** Supply explicit messages when defaults are unclear (`toBeTruthy`, `toBeFalsy`).  
+- **Message reuse.** Centralise shared messages in `assert-messages.const.ts`.  
+
+---
+
+## 9. TypeScript Guidelines
+
+- **Avoid `enum`.** Prefer `ValueOf<typeof ENUM>` or `ElementOf`.  
+
+```ts
+const APPLICANT_STATUSES = {
+  NOT_STARTED: 'Not started',
+  IN_PROGRESS: 'In progress',
+  COMPLETED: 'Completed',
+} as const;
+
+type ApplicantStatus = ValueOf<typeof APPLICANT_STATUSES>;
+```
+
+---
+
+## 10. Code Quality and Safety
+
+- **Code checks.** Run and fix all linting, formatting, and type‑check tasks before committing.  
+- **RegEx safety.** Test every regular expression for ReDoS; mark safe patterns with a comment `Safe against ReDoS:`.  
+
+---
+
+## 11. Writing a Test (Recipe)
+
+```ts
+// tags: e2e XRAY-123
+import { test, expect } from '@playwright/test';
+import { LoginPage } from '../pages/login.page';
+
+test('Consumer can sign in', async ({ page }) => {
+  const login = new LoginPage(page);
+  await login.visit();
+  await login.logIn('alice@example.com', 'secret');
+  await expect(page).toHaveURL(/dashboard/);
+});
+```
+
+**Checklist**
+
+1. Use Page Objects only (avoid raw selectors).  
+2. Include a single clear assertion.  
+3. Avoid arbitrary waits; rely on auto‑retry `expect`.  
+
