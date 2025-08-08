@@ -1,16 +1,13 @@
 import { test, expect } from "@playwright/test";
+import { LoginPage } from "../pages/LoginPage";
 import { Urls } from "../test-data/common/page-url-endpoints";
+import { DefaultUser } from '../test-data/users';
 
 test('Login with valid regular user', async ({page}) => {
-    await page.goto(Urls.login)
-
-    await page.locator('#userEmail').fill('tonuza7211@dropjar.com')
-    await page.locator('#userPassword').fill("123qweASD")
-
-    await page.getByRole('button', {name: 'Login'}).click()
+    const loginPage = new LoginPage(page);
+    await loginPage.visit(Urls.login);
+    await loginPage.login(DefaultUser.email, DefaultUser.password);
     await expect(page.getByRole('button', {name: 'Sign Out'})).toBeVisible()
-
-    
 
 })
 

@@ -2,14 +2,9 @@ import { test as baseTest, request} from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { Urls } from '../test-data/common/page-url-endpoints';
+import { getUserById, DefaultUser } from '../test-data/users';
 
-// remove: import testUser from '../test-data/qa/testUser.json';
-const testUser = JSON.parse(
-  fs.readFileSync(
-    path.resolve(__dirname, `../test-data/${process.env.ENV || 'qa'}/testUser.json`),
-    'utf-8'
-  )
-);
+// Centralized user data comes from `test-data/users`
 
 export * from '@playwright/test';
 
@@ -47,7 +42,7 @@ export const test = baseTest.extend<{}, { workerStorageState: string }>({
  * Retrieves user account credentials for the specified worker ID
  */
 function getUserAccount(workerId: number) {
-  return testUser.users.find((user: any) => user.id === workerId) || testUser.defaultUser;
+  return getUserById(workerId) || DefaultUser;
 }
 
 /**
