@@ -1,19 +1,18 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { Urls } from '../test-data/common/page-url-endpoints';
+import { BasePage } from './BasePage';
 
-
-class HomePage {
-    page: Page;
+class HomePage extends BasePage {
     cards: Locator;
 
-    constructor(page: Page)
-    {
-        this.page = page;
-        this.cards = page.locator('.card-body');
+    constructor(page: Page) {
+        super(page);
+        this.cards = this.page.locator('.card-body');
     }
 
     async openHomePage() {
-        await this.page.goto('https://rahulshettyacademy.com/client/#/dashboard/dash');
-        await this.page.waitForLoadState('networkidle');
+        await this.visit(Urls.dashboard);
+        await this.waitForNetworkIdle();
     }
 
     async selectCard(index?: number): Promise<number>{
@@ -33,15 +32,16 @@ class HomePage {
 
     async getCardDetails(index: number) {
         const card = this.cards.nth(index);
-        const title = await card.getByRole('heading', {level: 5}).innerText()
-        const price = await card.locator('.text-muted').innerText()
+        const title = await card.getByRole('heading', {level: 5}).describe(`Title of the card ${index}`).innerText();
+        const price = await card.locator('.text-muted').innerText();
         
         return { title, price };
     }
 
     async viewCardDetails(index: number){
+        const { title } = await this.getCardDetails(index); // Retrieve the title
         const card = this.cards.nth(index);
-        const viewButton = card.getByRole('button', {name: 'View'});
+        const viewButton = card.getByRole('button', {name: 'View'}).describe(`View ${title} (${index}) card`);
 
         await expect(viewButton).toBeVisible();
         await viewButton.click();
@@ -56,9 +56,7 @@ class HomePage {
         await expect(addButton).toBeVisible();
         await addButton.click();
         
-        await this.page.waitForResponse(response => 
-            response.url().includes('/cart') && response.status() === 200
-        );
+        await this.waitForApiResponse('/cart', 200);
     }
 
     async openRandomCardAndGetDetails() {
