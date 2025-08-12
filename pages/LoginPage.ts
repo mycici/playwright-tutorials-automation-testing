@@ -6,12 +6,14 @@ export class LoginPage extends BasePage{
     emailInput: Locator;
     passwordInput: Locator;
     loginButton: Locator;
+    signOutButton: Locator;
 
     constructor(page: Page){
         super(page);
         this.emailInput = this.page.locator('#userEmail');
         this.passwordInput = this.page.locator('#userPassword');
         this.loginButton = this.page.locator('#login');
+        this.signOutButton = this.page.getByRole('button', {name: 'Sign Out'});
     }
 
     async login(email: string, password: string){
@@ -20,6 +22,6 @@ export class LoginPage extends BasePage{
         await this.loginButton.click();
     }
     async verifyLogin(){
-        await expect(this.page.getByRole('button', {name: 'Sign Out'})).toBeVisible()
+        await expect(this.signOutButton).toBeVisible()
     }
 }
