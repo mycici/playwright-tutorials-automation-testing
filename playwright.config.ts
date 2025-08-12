@@ -5,8 +5,18 @@ import { defineConfig, devices } from '@playwright/test';
  */
 import dotenv from 'dotenv';
 import path from 'path';
-const envName = process.env.ENV || 'qa';
+const envName = (process.env.ENV || 'qa') as 'qa' | 'dev';
 dotenv.config({ path: path.resolve(__dirname, `.env.${envName}`) });
+
+// Map environments to their default base URLs. Can be overridden by BASE_URL env var.
+const defaultBaseUrls: Record<'qa' | 'dev', string> = {
+  qa: 'https://rahulshettyacademy.com',
+  dev: 'https://rahulshettyacademy.com',
+};
+
+function resolveBaseUrl(env: 'qa' | 'dev'): string {
+  return process.env.BASE_URL || defaultBaseUrls[env];
+}
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -25,9 +35,6 @@ export default defineConfig({
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.BASE_URL || 'https://rahulshettyacademy.com',
-
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
@@ -37,8 +44,12 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'qa',
+      use: { ...devices['Desktop Chrome'], baseURL: resolveBaseUrl('qa') },
+    },
+    {
+      name: 'dev',
+      use: { ...devices['Desktop Chrome'], baseURL: resolveBaseUrl('dev') },
     },
 
     /*{

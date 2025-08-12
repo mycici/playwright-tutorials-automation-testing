@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
-import { ENV } from './env';
+
+export type Environment = 'qa' | 'dev';
 
 export interface TestUserAccount {
   id?: number;
@@ -14,19 +15,22 @@ export interface TestUsersFile {
   defaultUser: Omit<TestUserAccount, 'id'>;
 }
 
-function loadUsers(): TestUsersFile {
-  const filePath = path.resolve(__dirname, `${ENV}/testUser.json`);
+export function loadUsersForEnv(envName: Environment): TestUsersFile {
+  const filePath = path.resolve(__dirname, `${envName}/testUser.json`);
   const raw = fs.readFileSync(filePath, 'utf-8');
   return JSON.parse(raw) as TestUsersFile;
 }
 
-const usersFile = loadUsers();
+export function getDefaultUser(envName: Environment): Omit<TestUserAccount, 'id'> {
+  return loadUsersForEnv(envName).defaultUser;
+}
 
-export const DefaultUser: Omit<TestUserAccount, 'id'> = usersFile.defaultUser;
-export const Users: TestUserAccount[] = usersFile.users;
+export function getUsers(envName: Environment): TestUserAccount[] {
+  return loadUsersForEnv(envName).users;
+}
 
-export function getUserById(id: number): TestUserAccount | undefined {
-  return Users.find(u => u.id === id);
+export function getUserByIdFromEnv(envName: Environment, id: number): TestUserAccount | undefined {
+  return getUsers(envName).find(u => u.id === id);
 }
 
 
