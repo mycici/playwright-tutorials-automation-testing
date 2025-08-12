@@ -2,7 +2,7 @@ import { test as baseTest, request} from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { Urls } from '../test-data/common/page-url-endpoints';
-import { getUserById, DefaultUser } from '../test-data/users';
+import { getUserByIdFromEnv, getDefaultUser, type Environment } from '../test-data/users';
 
 // Centralized user data comes from `test-data/users`
 
@@ -42,7 +42,8 @@ export const test = baseTest.extend<{}, { workerStorageState: string }>({
  * Retrieves user account credentials for the specified worker ID
  */
 function getUserAccount(workerId: number) {
-  return getUserById(workerId) || DefaultUser;
+  const envName = (test.info().project.name as Environment) || 'qa';
+  return getUserByIdFromEnv(envName, workerId) || getDefaultUser(envName);
 }
 
 /**

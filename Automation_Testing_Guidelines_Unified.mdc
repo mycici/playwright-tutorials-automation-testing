@@ -1,22 +1,6 @@
-## 1. Golden Rules
-
-- **Test in isolation.** Each test prepares its own pre‑conditions so it can run in parallel.  
-- **One purpose per test.** Keep scenarios laser‑focused; shorter tests fail faster and read better.  
-- **Use fixtures for setup and teardown.** Place common setup logic in `/fixtures/` and keep it out of the test body.  
-- **Stay remote.** Interact only through the public UI or API—never touch the database or local files directly.  
-- **Assert what matters.** Use Playwright `expect` (`hard` or `soft`) so reports are accurate and readable.  
-- **Config‑driven data.** Generate data with factories or JSON files; avoid hard‑coded literals.  
-
 ---
-
-## 2. Page Object Model (POM)
-
-- **POM pattern.** Follow the Playwright POM guide. Page Objects extend `BasePage` and live in `/pages/`; reusable forms extend `BaseForm` in `/pages/forms/`.  
-- **URL endpoints.** Register every page in `page-url-endpoints.ts` so it can be opened with `page.visit()`.  
-- **Fixture wiring.** Add Page Object fixtures in `page-object-fixtures.ts`.  
-
+alwaysApply: false
 ---
-
 ## 3. Test Data Management
 
 - **Types and factories.** Define data models in `/models/` and create dynamic data with `faker`.  
