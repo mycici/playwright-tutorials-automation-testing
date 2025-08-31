@@ -42,10 +42,10 @@ jobs:
       run: npx playwright install --with-deps chromium
     
     - name: Run Playwright tests in Chrome
-      run: npx playwright test --project=qa
+      run: npm run test:ci
       env:
         ENV: qa
-        BASE_URL: ${{ secrets.BASE_URL}}
+        BASE_URL: ${{ secrets.BASE_URL || 'https://rahulshettyacademy.com' }}
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
