@@ -10,6 +10,15 @@ on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
+    inputs:
+      enable_trace_viewer:
+        description: 'Enable Trace Viewer on GitHub Pages'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 permissions:
   contents: read
@@ -46,16 +55,99 @@ jobs:
       env:
         ENV: qa
         BASE_URL: ${{ secrets.BASE_URL || 'https://rahulshettyacademy.com' }}
+        ENABLE_TRACE_VIEWER: ${{ github.event.inputs.enable_trace_viewer || 'false' }}
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
       if: always()
     
+    - name: Setup Trace Viewer for GitHub Pages
+      if: always() && github.event.inputs.enable_trace_viewer == 'true'
+      run: |
+        # Create a directory structure for GitHub Pages
+        mkdir -p github-pages-site/traces
+        mkdir -p github-pages-site/viewer
+        
+        # Copy HTML report
+        cp -r playwright-report/* github-pages-site/
+        
+        # Copy trace viewer assets
+        cp -r node_modules/@playwright/test/lib/traceViewer/web/* github-pages-site/viewer/
+        
+        # Copy trace files if they exist
+        if [ -d "test-results" ]; then
+          find test-results -name "*.zip" -exec cp {} github-pages-site/traces/ \;
+        fi
+        
+        # Create index page that lists available traces
+        cat > github-pages-site/traces/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>🔍 Playwright Traces</title>
+            <style>
+                body { font-family: system-ui; margin: 2rem; line-height: 1.6; }
+                .trace-link { display: block; margin: 1rem 0; padding: 1rem; 
+                            background: #f5f5f5; text-decoration: none; border-radius: 8px; 
+                            border-left: 4px solid #2196f3; transition: all 0.2s; }
+                .trace-link:hover { background: #e3f2fd; transform: translateX(4px); }
+                .back-link { color: #666; text-decoration: none; }
+                .back-link:hover { color: #2196f3; }
+                .no-traces { background: #e8f5e8; padding: 1rem; border-radius: 8px; 
+                           border-left: 4px solid #4caf50; }
+            </style>
+        </head>
+        <body>
+            <h1>🔍 Playwright Traces</h1>
+            <p><a href="../index.html" class="back-link">← Back to Test Report</a></p>
+            <div id="traces"></div>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    fetch('./')
+                        .then(r => r.text())
+                        .then(html => {
+                            const traceFiles = [...html.matchAll(/href="([^"]*\.zip)"/g)]
+                                .map(m => m[1])
+                                .filter(f => f.endsWith('.zip'));
+                            
+                            const container = document.getElementById('traces');
+                            if (traceFiles.length > 0) {
+                                traceFiles.forEach(trace => {
+                                    const link = document.createElement('a');
+                                    link.href = `../viewer/?trace=traces/${trace}`;
+                                    link.className = 'trace-link';
+                                    link.textContent = `🎬 View Trace: ${trace.replace('.zip', '')}`;
+                                    container.appendChild(link);
+                                });
+                            } else {
+                                container.innerHTML = '<div class="no-traces">✅ No traces available - all tests passed!</div>';
+                            }
+                        })
+                        .catch(() => {
+                            document.getElementById('traces').innerHTML = '<p>⚠️ Could not load trace files</p>';
+                        });
+                });
+            </script>
+        </body>
+        </html>
+        EOF
+        
+        # Add trace viewer link to main report
+        if [ -f "github-pages-site/index.html" ]; then
+            sed -i 's/<\/body>/<div style="margin: 2rem 0; padding: 1rem; background: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;"><strong>🔍 Debug Tools:<\/strong> <a href="traces\/" style="margin-left: 1rem; color: #1976d2; text-decoration: none;">View Traces<\/a><\/div><\/body>/' github-pages-site/index.html
+        fi
+
+    - name: Copy standard report (no traces)
+      if: always() && github.event.inputs.enable_trace_viewer != 'true'
+      run: |
+        mkdir -p github-pages-site
+        cp -r playwright-report/* github-pages-site/
+
     - name: Upload to GitHub Pages
       uses: actions/upload-pages-artifact@v3
       if: always()
       with:
-        path: playwright-report/
+        path: github-pages-site/
     
     - name: Deploy to GitHub Pages
       id: deployment
