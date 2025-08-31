@@ -64,13 +64,13 @@ jobs:
       uses: actions/configure-pages@v4
       if: always()
     
-    - name: Upload to GitHub Pages
+    - name: Upload
       uses: actions/upload-pages-artifact@v3
       if: always()
       with:
         path: playwright-report/
     
-    - name: Deploy to GitHub Pages
+    - name: Deploy
       id: deployment
       uses: actions/deploy-pages@v4
       if: always()
