@@ -9,7 +9,7 @@ class CardDetailsPage extends BasePage {
     constructor(page: Page) {
         super(page);
         this.section = this.page.locator('.container');
-        this.title = this.section.getByRole('heading', { level: 2 });
+        this.title = this.section.getByRole('heading', { level: 20 });
         this.price = this.section.getByRole('heading', { level: 3 });
     }
 
