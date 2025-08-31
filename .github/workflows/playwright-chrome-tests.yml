@@ -45,7 +45,7 @@ jobs:
       run: npm run test:ci
       env:
         ENV: qa
-        BASE_URL: ${{ secrets.BASE_URL || 'https://rahulshettyacademy.com' }}
+        BASE_URL: ${{ secrets.BASE_URL != '' && secrets.BASE_URL || 'https://rahulshettyacademy.com' }}
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
