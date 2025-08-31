@@ -57,6 +57,10 @@ jobs:
         BASE_URL: ${{ secrets.BASE_URL || 'https://rahulshettyacademy.com' }}
         ENABLE_TRACE_VIEWER: ${{ github.event.inputs.enable_trace_viewer || 'false' }}
     
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      if: always()
+    
     - name: Setup Trace Viewer for GitHub Pages
       if: always() && github.event.inputs.enable_trace_viewer == 'true'
       run: |
