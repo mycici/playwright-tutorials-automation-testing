@@ -1,6 +1,5 @@
 import { BasePage } from "./BasePage";
 import { Locator, Page, expect } from "@playwright/test";
-import { Urls } from "../test-data/common/page-url-endpoints";
 
 export class LoginPage extends BasePage{
     emailInput: Locator;

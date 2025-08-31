@@ -2,7 +2,9 @@ import { test } from "../fixtures/fixtures";
 import HomePage from "../pages/HomePage";
 import CardDetailsPage from "../pages/CardDetailsPage";
 
-test('Random card details match between list and detail pages', async ({page}) => {
+test('Random card details match between list and detail pages', 
+    { tag: '@P1' },
+    async ({page}) => {
     const homePage = new HomePage(page);
     await homePage.openHomePage();
     
