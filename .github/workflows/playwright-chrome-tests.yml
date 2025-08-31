@@ -58,19 +58,19 @@ jobs:
       run: npm run test:ci
       env:
         ENV: qa
-        BASE_URL: ${{ secrets.BASE_URL}}
+        BASE_URL: ${{ secrets.BASE_URL || 'https://rahulshettyacademy.com' }}
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
       if: always()
     
-    - name: Upload
+    - name: Upload to GitHub Pages
       uses: actions/upload-pages-artifact@v3
       if: always()
       with:
         path: playwright-report/
     
-    - name: Deploy
+    - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
       if: always()
