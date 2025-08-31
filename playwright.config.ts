@@ -34,7 +34,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: process.env.CI ? 'on-first-retry' : 'off',  // Less trace collection on CI
+    trace: process.env.CI && process.env.ENABLE_TRACE_VIEWER === 'true' ? 'retain-on-failure' : 'off',
     screenshot: 'only-on-failure',
     video: process.env.CI ? 'off' : 'retain-on-failure',  // No video on CI for speed
   },
