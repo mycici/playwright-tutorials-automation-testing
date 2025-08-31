@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 import { Urls } from '../test-data/common/page-url-endpoints';
 import { BasePage } from './BasePage';
 
@@ -12,10 +12,12 @@ type CardLocators = {
 
 class HomePage extends BasePage {
   cards: Locator;
+  myCartHeader: Locator;
 
   constructor(page: Page) {
     super(page);
     this.cards = this.page.locator('.card-body').describe('All product cards');
+    this.myCartHeader = this.page.getByRole('heading', { name: 'My Cart' });
   }
 
   async openHomePage() {
@@ -63,6 +65,15 @@ class HomePage extends BasePage {
     await card.view.click();
     return { index, title, price };
   }
+  async addRandomCardToCart() {
+    const { index, card } = await this.cardAt();
+    await card.add.click();
+  }
+  async openCart() {
+    await this.page.locator('[routerlink="/dashboard/cart"]').click();
+    await expect(this.myCartHeader).toBeVisible();
+  }
+
 }
 
 export default HomePage;
