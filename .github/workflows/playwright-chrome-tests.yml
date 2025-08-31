@@ -1,35 +1,38 @@
-name: Playwright Chrome Tests
+name: UI Regression [Chrome]
 
-# Required GitHub Secrets (go to Settings > Secrets and variables > Actions):
-# QA_USERNAME - Username for QA environment
-# QA_PASSWORD - Password for QA environment  
-# DEV_USERNAME - Username for DEV environment
-# DEV_PASSWORD - Password for DEV environment
-# Optional:
-# QA_BASE_URL - Base URL for QA (defaults to https://rahulshettyacademy.com)
-# DEV_BASE_URL - Base URL for DEV (defaults to https://rahulshettyacademy.com)
+# Optional GitHub Secrets (go to Settings > Secrets and variables > Actions):
+# BASE_URL - Base URL (defaults to https://rahulshettyacademy.com)
+#
+# Note: This workflow will deploy Playwright HTML reports to GitHub Pages
+# Make sure to enable GitHub Pages in your repository settings (Settings > Pages > Source: GitHub Actions)
 
 on:
   push:
-    branches: [ main, master, Github ]
-  pull_request:
-    branches: [ main, master, Github ]
+    branches: [ "main" ]
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        environment: [qa, dev]
-    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
     - uses: actions/checkout@v4
     
     - uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: '20'
         cache: 'npm'
     
     - name: Install dependencies
@@ -38,35 +41,23 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps chromium
     
-    - name: Create environment file
-      run: |
-        if [ "${{ matrix.environment }}" = "qa" ]; then
-          echo "BASE_URL=${{ secrets.QA_BASE_URL || 'https://rahulshettyacademy.com' }}" > .env.qa
-          echo "USERNAME=${{ secrets.QA_USERNAME }}" >> .env.qa
-          echo "PASSWORD=${{ secrets.QA_PASSWORD }}" >> .env.qa
-        else
-          echo "BASE_URL=${{ secrets.DEV_BASE_URL || 'https://rahulshettyacademy.com' }}" > .env.dev
-          echo "USERNAME=${{ secrets.DEV_USERNAME }}" >> .env.dev
-          echo "PASSWORD=${{ secrets.DEV_PASSWORD }}" >> .env.dev
-        fi
-    
     - name: Run Playwright tests in Chrome
-      run: npx playwright test --project=${{ matrix.environment }}
+      run: npx playwright test --project=qa
       env:
-        ENV: ${{ matrix.environment }}
+        ENV: qa
+        BASE_URL: ${{ secrets.BASE_URL}}
     
-    - name: Upload Playwright Report
-      uses: actions/upload-artifact@v4
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      if: always()
+    
+    - name: Upload to GitHub Pages
+      uses: actions/upload-pages-artifact@v3
       if: always()
       with:
-        name: playwright-report-${{ matrix.environment }}
         path: playwright-report/
-        retention-days: 30
     
-    - name: Upload Test Results
-      uses: actions/upload-artifact@v4
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
       if: always()
-      with:
-        name: test-results-${{ matrix.environment }}
-        path: test-results/
-        retention-days: 30

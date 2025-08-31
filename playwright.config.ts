@@ -1,17 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-import dotenv from 'dotenv';
-import path from 'path';
+
 const envName = (process.env.ENV || 'qa') as 'qa' | 'dev';
-dotenv.config({ path: path.resolve(__dirname, `.env.${envName}`) });
 
 // Map environments to their default base URLs. Can be overridden by BASE_URL env var.
 const defaultBaseUrls: Record<'qa' | 'dev', string> = {
   qa: 'https://rahulshettyacademy.com',
-  dev: 'https://rahulshettyacademy.com',
+  dev: 'https://rahulshettyacademy.com', // Change this to your dev URL
 };
 
 function resolveBaseUrl(env: 'qa' | 'dev'): string {
