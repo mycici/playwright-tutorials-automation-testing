@@ -13,7 +13,7 @@ test('Random card details match between list and detail pages',
     await cardDetailsPage.verifyCardDetails(cardDetails);
 });
 
-test('Random ', 
+test('Add random card to cart and open cart', 
     { tag: '@P2' },
     async ({page}) => {
     const homePage = new HomePage(page);
