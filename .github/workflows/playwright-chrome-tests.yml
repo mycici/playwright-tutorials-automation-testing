@@ -1,0 +1,63 @@
+name: UI Regression [Chrome]
+
+# Optional GitHub Secrets (go to Settings > Secrets and variables > Actions):
+# BASE_URL - Base URL (defaults to https://rahulshettyacademy.com)
+#
+# Note: This workflow will deploy Playwright HTML reports to GitHub Pages
+# Make sure to enable GitHub Pages in your repository settings (Settings > Pages > Source: GitHub Actions)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps chromium
+    
+    - name: Run Playwright tests in Chrome
+      run: npx playwright test --project=qa
+      env:
+        ENV: qa
+        BASE_URL: ${{ secrets.BASE_URL}}
+    
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      if: always()
+    
+    - name: Upload to GitHub Pages
+      uses: actions/upload-pages-artifact@v3
+      if: always()
+      with:
+        path: playwright-report/
+    
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      if: always()
