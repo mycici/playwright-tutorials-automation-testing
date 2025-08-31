@@ -12,8 +12,9 @@
 4. [Preventing Merge Conflicts](#preventing-merge-conflicts)
 5. [Resolving Conflicts](#resolving-conflicts)
 6. [Project-Specific Guidelines](#project-specific-guidelines)
-7. [Quick Reference](#quick-reference)
-8. [Emergency Commands](#emergency-commands)
+7. [Real-World Case Study](#real-world-case-study-github-actions-workflow-conflict)
+8. [Quick Reference](#quick-reference)
+9. [Emergency Commands](#emergency-commands)
 
 ---
 
@@ -638,6 +639,197 @@ export default defineConfig({
   ]
 }
 ```
+
+---
+
+## 🔍 Real-World Case Study: GitHub Actions Workflow Conflict
+
+### **The Problem: CI/CD Pipeline Failure with Merge Conflicts**
+
+**Situation**: A GitHub Actions workflow was failing with the error:
+```
+cp: cannot stat 'node_modules/@playwright/test/lib/traceViewer/web/*': No such file or directory
+```
+
+**Context**: 
+- Feature branch `Github` had fixes for a broken Playwright trace viewer setup
+- Main branch still contained the old, problematic configuration
+- Pull request showed merge conflicts in two critical files
+
+### **Why This Happened**
+
+1. **Outdated File Paths**: The workflow used hardcoded paths to Playwright's internal files that changed between versions
+2. **Complex Custom Setup**: Instead of using Playwright's built-in capabilities, the workflow tried to manually copy trace viewer assets
+3. **Parallel Development**: Multiple developers working on CI/CD improvements simultaneously
+4. **Version Mismatch**: Playwright 1.53.1 had different internal structure than expected
+
+### **The Investigation Process**
+
+#### **Step 1: Identify the Root Cause**
+```bash
+# First, we examined the failing workflow
+cat .github/workflows/playwright-chrome-tests.yml | grep -A 10 "trace"
+
+# Found the problematic line:
+# cp -r node_modules/@playwright/test/lib/traceViewer/web/* github-pages-site/viewer/
+```
+
+#### **Step 2: Check Playwright Version and Structure**
+```bash
+# Checked what version we're using
+cat package.json | grep playwright
+# Result: "@playwright/test": "^1.53.1"
+
+# Tried to locate the actual trace viewer files
+find node_modules/@playwright -name "*trace*" -type d
+# Result: Path didn't exist in newer Playwright versions
+```
+
+#### **Step 3: Analyze the Conflict**
+```bash
+# Compared the differences between branches
+git diff origin/main HEAD -- .github/workflows/playwright-chrome-tests.yml
+git diff origin/main HEAD -- playwright.config.ts
+
+# Found that the Github branch had the correct simplified fixes
+# Main branch still had the broken complex setup
+```
+
+### **The Resolution Strategy**
+
+#### **Option Analysis**
+We considered three approaches:
+1. **Disable trace viewer** - Quick fix but loses functionality
+2. **Fix the file paths** - Fragile, depends on Playwright internals
+3. **Simplify using built-in features** ✅ - Robust, future-proof
+
+#### **Implementation Steps**
+
+**Step 1: Simplify Playwright Configuration**
+```typescript
+// OLD: Complex conditional logic
+trace: process.env.CI && process.env.ENABLE_TRACE_VIEWER === 'true' ? 'retain-on-failure' : 'off',
+
+// NEW: Simple, always-on approach
+trace: 'retain-on-failure',  // Generate traces on failure
+```
+
+**Step 2: Simplify GitHub Actions Workflow**
+```yaml
+# REMOVED: 80+ lines of complex trace viewer setup
+# REPLACED WITH: Simple copy operation
+- name: Prepare report for GitHub Pages
+  if: always()
+  run: |
+    mkdir -p github-pages-site
+    cp -r playwright-report/* github-pages-site/
+```
+
+**Step 3: Resolve Merge Conflicts**
+```bash
+# Switch to main branch
+git checkout main
+
+# Merge the fixes from Github branch
+git merge Github
+
+# Resolve conflicts by choosing the fixed versions
+git checkout --theirs .github/workflows/playwright-chrome-tests.yml
+git checkout --theirs playwright.config.ts
+
+# Commit the resolution
+git add .
+git commit -m "Resolve merge conflicts: Use simplified Playwright workflow and trace configuration"
+
+# Push the fix
+git push origin main
+```
+
+### **Key Lessons Learned**
+
+#### **Technical Lessons**
+1. **Avoid depending on internal file structures** - They can change between versions
+2. **Prefer built-in solutions** over custom implementations
+3. **Keep CI/CD configurations simple** - Complexity leads to brittleness
+4. **Test configuration changes** in isolation before merging
+
+#### **Workflow Lessons**
+1. **Communicate major changes** - CI/CD modifications affect everyone
+2. **Use feature flags** for experimental features rather than complex conditionals
+3. **Document breaking changes** in commit messages
+4. **Review dependencies** when upgrading versions
+
+### **Prevention Strategies**
+
+#### **For Future CI/CD Changes**
+```bash
+# Before modifying shared workflow files
+git pull origin main  # Get latest changes
+git log --oneline -10 -- .github/workflows/  # Check recent changes
+
+# Make changes in small, testable increments
+git checkout -b ci/improve-trace-handling
+# Make one focused change
+git commit -m "Simplify trace collection configuration"
+# Test in PR before merging
+```
+
+#### **For Dependency Updates**
+```bash
+# When updating Playwright or other tools
+# 1. Check changelog for breaking changes
+# 2. Test locally first
+# 3. Update configuration incrementally
+# 4. Document any required workflow changes
+```
+
+#### **Team Communication Protocol**
+- **Announce CI/CD changes** in team chat before starting
+- **Create small, focused PRs** for infrastructure changes
+- **Test changes** in feature branches before merging
+- **Document** any manual steps required after deployment
+
+### **The Fix in Action**
+
+**Before** (Broken):
+- Complex 100+ line workflow with manual file copying
+- Dependency on internal Playwright file structure
+- Conditional logic based on environment variables
+- Fragile and version-dependent
+
+**After** (Working):
+- Simple 10-line workflow using built-in capabilities
+- No dependency on internal file paths
+- Automatic trace generation on test failures
+- Robust and future-proof
+
+**Result**: 
+- ✅ GitHub Actions workflow runs successfully
+- ✅ Test reports include interactive trace viewing
+- ✅ No more missing file errors
+- ✅ Simpler maintenance going forward
+
+### **Code Snippets for Reference**
+
+**Fixed Playwright Config**:
+```typescript
+use: {
+  trace: 'retain-on-failure',  // Always generate traces on failure
+  screenshot: 'only-on-failure',
+  video: process.env.CI ? 'off' : 'retain-on-failure',
+}
+```
+
+**Fixed Workflow Step**:
+```yaml
+- name: Prepare report for GitHub Pages
+  if: always()
+  run: |
+    mkdir -p github-pages-site
+    cp -r playwright-report/* github-pages-site/
+```
+
+This case demonstrates how **simplicity beats complexity** in CI/CD workflows and the importance of **using tools as intended** rather than building custom workarounds.
 
 ---
 
